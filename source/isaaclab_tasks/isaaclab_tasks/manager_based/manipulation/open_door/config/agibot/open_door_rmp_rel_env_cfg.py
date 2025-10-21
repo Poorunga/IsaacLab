@@ -193,14 +193,14 @@ class SceneCfg(InteractiveSceneCfg):
         actuators={
             "door": ImplicitActuatorCfg(
                 joint_names_expr=["joint_0"],
-                effort_limit_sim=100.0,
-                damping=80.0,
-                stiffness=400.0,
+                effort_limit_sim=87.0,
+                damping=1.0,
+                stiffness=10.0,
             ),
             "handle": ImplicitActuatorCfg(
                 joint_names_expr=["joint_2"],
-                effort_limit_sim=100.0,
-                damping=10,
+                effort_limit_sim=87.0,
+                damping=2.5,
                 stiffness=0.0,
             ),
         },
@@ -309,7 +309,7 @@ class OpenDoorEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the open door environment."""
 
     # Scene settings
-    scene: SceneCfg = SceneCfg(num_envs=128, env_spacing=3.0)
+    scene: SceneCfg = SceneCfg(num_envs=128, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -378,7 +378,7 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
         # Listens to the required transforms
         self.marker_cfg = FRAME_MARKER_CFG.copy()
         self.marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-        self.marker_cfg.prim_path = "/Visuals/FrameTransformer"
+        self.marker_cfg.prim_path = "/Visuals/EndEffectorFrameTransformer"
 
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/base_link",
@@ -387,7 +387,7 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
                     prim_path="{ENV_REGEX_NS}/Robot/gripper_center",
-                    name="end_effector",
+                    name="ee_tcp",
                     offset=OffsetCfg(
                         pos=[0.0, 0.0, 0.0],
                         rot=[0.7071, 0.0, -0.7071, 0.0],

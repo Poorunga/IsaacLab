@@ -12,6 +12,6 @@ if TYPE_CHECKING:
 def rel_ee_handle_distance(env: ManagerBasedRLEnv) -> torch.Tensor:
     """The distance between the end-effector and the door handle."""
     ee_tf_data: FrameTransformerData = env.scene["ee_frame"].data
-    cabinet_tf_data: FrameTransformerData = env.scene["handle_frame"].data
+    handle_tf_data: FrameTransformerData = env.scene["handle_frame"].data
 
-    return cabinet_tf_data.target_pos_w[..., 0, :] - ee_tf_data.target_pos_w[..., 0, :]
+    return handle_tf_data.target_pos_w[..., 0, :] - ee_tf_data.target_pos_w[..., 0, :]
