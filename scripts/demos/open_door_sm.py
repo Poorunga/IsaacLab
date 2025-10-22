@@ -196,7 +196,7 @@ class OpenDoorSm:
 
         # handle grasp offset
         self.handle_grasp_offset = torch.zeros((self.num_envs, 7), device=self.device)
-        self.handle_grasp_offset[:, 0] = 0.025
+        self.handle_grasp_offset[:, 0] = 0.01
         self.handle_grasp_offset[:, -1] = 1.0  # warp expects quaternion as (x, y, z, w)
 
         # door opening rate

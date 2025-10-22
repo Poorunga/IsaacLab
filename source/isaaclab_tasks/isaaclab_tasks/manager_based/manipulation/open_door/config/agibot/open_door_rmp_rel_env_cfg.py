@@ -19,12 +19,13 @@ import isaaclab.sim as sim_utils
 from isaaclab.utils import configclass
 
 import isaaclab_tasks.manager_based.manipulation.open_door.mdp as mdp
+from isaaclab.sim.schemas.schemas_cfg import MassPropertiesCfg
 
 ##
 # Pre-defined configs
 ##
 from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from isaaclab.controllers.config.rmp_flow import AGIBOT_LEFT_ARM_RMPFLOW_CFG  # isort: skip
+from isaaclab.controllers.config.rmp_flow import AGIBOT_RIGHT_ARM_RMPFLOW_CFG  # isort: skip
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR  # isort: skip
 
 FRAME_MARKER_SMALL_CFG = FRAME_MARKER_CFG.copy()
@@ -185,23 +186,25 @@ class SceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.UsdFileCfg(
             usd_path=f"{MY_ASSETS_PATH}/Objects/Door/door_9288/door_9288.usd",
             activate_contact_sensors=False,
+            mass_props=MassPropertiesCfg(mass=10.0),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(1.0, 0.0, 0.9),
+            pos=(1.2, -0.5, 0.95),
             rot=(1.0, 0.0, 0.0, -0.05),
+            joint_pos={"joint_0": 0.0, "joint_2": 0.3},
         ),
         actuators={
             "door": ImplicitActuatorCfg(
                 joint_names_expr=["joint_0"],
-                effort_limit_sim=87.0,
-                damping=80.0,
-                stiffness=400.0,
+                effort_limit_sim=0.0,
+                damping=5.0,
+                stiffness=0.0,
             ),
             "handle": ImplicitActuatorCfg(
                 joint_names_expr=["joint_2"],
                 effort_limit_sim=87.0,
-                damping=2.5,
-                stiffness=1.0,
+                damping=80.0,
+                stiffness=400.0,
             ),
         },
     )
@@ -209,7 +212,7 @@ class SceneCfg(InteractiveSceneCfg):
     # Frame definitions for the door.
     handle_frame = FrameTransformerCfg(
         prim_path="{ENV_REGEX_NS}/Door/base",
-        debug_vis=True,
+        debug_vis=False,
         visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/HandleFrameTransformer"),
         target_frames=[
             FrameTransformerCfg.FrameCfg(
@@ -217,7 +220,7 @@ class SceneCfg(InteractiveSceneCfg):
                 name="handle_frame",
                 offset=OffsetCfg(
                     pos=(0.05, 0.0, 0.08),           # -y,-z,-x
-                    rot=(0.7071, 0.0, 0.7071, 0.0),  # end effector aligned
+                    rot=[0.0, 0.0, -1.0, 0.0]
                 ),
             ),
         ],
@@ -287,8 +290,8 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.8, 1.25),
-            "dynamic_friction_range": (0.8, 1.25),
+            "static_friction_range": (5.23, 5.25),
+            "dynamic_friction_range": (5.23, 5.25),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 16,
         },
@@ -299,8 +302,8 @@ class EventCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("door", body_names="link_2"),
-            "static_friction_range": (1.0, 1.25),
-            "dynamic_friction_range": (1.25, 1.5),
+            "static_friction_range": (5.23, 5.25),
+            "dynamic_friction_range": (5.45, 5.5),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 16,
         },
@@ -342,7 +345,7 @@ class OpenDoorEnvCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 1
         self.episode_length_s = 8.0
-        self.viewer.eye = (-2.0, 2.0, 2.0)
+        self.viewer.eye = (-2.0, -2.0, 2.0)
         self.viewer.lookat = (0.8, 0.0, 0.5)
         # simulation settings
         self.sim.dt = 1 / 60  # 60Hz
@@ -362,46 +365,46 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
         # Set Agibot as robot
         self.scene.robot = AGIBOT_A2D_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
-        # Set actions for the specific robot type (Agibot)
         self.actions.arm_action = RMPFlowActionCfg(
             asset_name="robot",
-            joint_names=["left_arm_joint.*"],
-            body_name="gripper_center",
-            controller=AGIBOT_LEFT_ARM_RMPFLOW_CFG,
+            joint_names=["right_arm_joint.*"],
+            body_name="right_gripper_center",
+            controller=AGIBOT_RIGHT_ARM_RMPFLOW_CFG,
             scale=1.0,
-            body_offset=RMPFlowActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0], rot=[0.7071, 0.0, -0.7071, 0.0]),
+            body_offset=RMPFlowActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0]),
             articulation_prim_expr="/World/envs/env_.*/Robot",
+            use_relative_mode=False,
         )
 
         # Enable Parallel Gripper:
         self.actions.gripper_action = mdp.BinaryJointPositionActionCfg(
             asset_name="robot",
-            joint_names=["left_hand_joint1", "left_.*_Support_Joint"],
-            open_command_expr={"left_hand_joint1": 0.994, "left_.*_Support_Joint": 0.994},
-            close_command_expr={"left_hand_joint1": 0.0, "left_.*_Support_Joint": 0.0},
+            joint_names=["right_hand_joint1", "right_.*_Support_Joint"],
+            open_command_expr={"right_hand_joint1": 0.994, "right_.*_Support_Joint": 0.994},
+            close_command_expr={"right_hand_joint1": 0.0, "right_.*_Support_Joint": 0.0},
         )
 
         # find joint ids for grippers
-        self.gripper_joint_names = ["left_hand_joint1", "left_Right_1_Joint"]
+        self.gripper_joint_names = ["right_hand_joint1", "right_Right_1_Joint"]
         self.gripper_open_val = 0.994
         self.gripper_threshold = 0.2
 
         # Listens to the required transforms
         self.marker_cfg = FRAME_MARKER_CFG.copy()
         self.marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-        self.marker_cfg.prim_path = "/Visuals/EndEffectorFrameTransformer"
+        self.marker_cfg.prim_path = "/Visuals/FrameTransformer"
 
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/base_link",
-            debug_vis=True,
+            debug_vis=False,
             visualizer_cfg=self.marker_cfg,
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/gripper_center",
-                    name="ee_tcp",
+                    prim_path="{ENV_REGEX_NS}/Robot/right_gripper_center",
+                    name="end_effector",
                     offset=OffsetCfg(
                         pos=[0.0, 0.0, 0.0],
-                        rot=[0.7071, 0.0, -0.7071, 0.0],
+                        rot=[1.0, 0.0, 0.0, 0.0],
                     ),
                 ),
             ],
