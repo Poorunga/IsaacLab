@@ -187,37 +187,37 @@ class SceneCfg(InteractiveSceneCfg):
             activate_contact_sensors=False,
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(1.3, 0.0, 0.9),
+            pos=(1.0, 0.0, 0.9),
             rot=(1.0, 0.0, 0.0, -0.05),
         ),
         actuators={
             "door": ImplicitActuatorCfg(
                 joint_names_expr=["joint_0"],
                 effort_limit_sim=87.0,
-                damping=1.0,
-                stiffness=10.0,
+                damping=80.0,
+                stiffness=400.0,
             ),
             "handle": ImplicitActuatorCfg(
                 joint_names_expr=["joint_2"],
                 effort_limit_sim=87.0,
                 damping=2.5,
-                stiffness=0.0,
+                stiffness=1.0,
             ),
         },
     )
 
     # Frame definitions for the door.
     handle_frame = FrameTransformerCfg(
-        prim_path="{ENV_REGEX_NS}/Door/base/base",
+        prim_path="{ENV_REGEX_NS}/Door/base",
         debug_vis=True,
         visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/HandleFrameTransformer"),
         target_frames=[
             FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Door/base/link_2",
+                prim_path="{ENV_REGEX_NS}/Door/link_2",
                 name="handle_frame",
                 offset=OffsetCfg(
-                    pos=[0.05, 0.0, 0.08], #  -y,-z,-x
-                    rot=[0.7071, 0.0, -0.7071, 0.0], # end effector aligned
+                    pos=(0.05, 0.0, 0.08),           # -y,-z,-x
+                    rot=(0.7071, 0.0, 0.7071, 0.0),  # end effector aligned
                 ),
             ),
         ],
@@ -226,7 +226,7 @@ class SceneCfg(InteractiveSceneCfg):
     # plane
     plane = AssetBaseCfg(
         prim_path="/World/GroundPlane",
-        init_state=AssetBaseCfg.InitialStateCfg(),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0]),
         spawn=sim_utils.GroundPlaneCfg(),
         collision_group=-1,
     )
@@ -282,16 +282,31 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
-    reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset", params={"reset_joint_targets": True})
+    robot_physics_material = EventTerm(
+        func=mdp.randomize_rigid_body_material,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+            "static_friction_range": (0.8, 1.25),
+            "dynamic_friction_range": (0.8, 1.25),
+            "restitution_range": (0.0, 0.0),
+            "num_buckets": 16,
+        },
+    )
 
-    # reset_robot_joints = EventTerm(
-    #     func=mdp.reset_joints_by_offset,
-    #     mode="reset",
-    #     params={
-    #         "position_range": (-0.1, 0.1),
-    #         "velocity_range": (0.0, 0.0),
-    #     },
-    # )
+    door_physics_material = EventTerm(
+        func=mdp.randomize_rigid_body_material,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("door", body_names="link_2"),
+            "static_friction_range": (1.0, 1.25),
+            "dynamic_friction_range": (1.25, 1.5),
+            "restitution_range": (0.0, 0.0),
+            "num_buckets": 16,
+        },
+    )
+
+    reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset", params={"reset_joint_targets": True})
 
 
 @configclass
@@ -347,9 +362,6 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
         # Set Agibot as robot
         self.scene.robot = AGIBOT_A2D_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
-        use_relative_mode_env = os.getenv("USE_RELATIVE_MODE", "True")
-        self.use_relative_mode = use_relative_mode_env.lower() in ["true", "1", "t"]
-
         # Set actions for the specific robot type (Agibot)
         self.actions.arm_action = RMPFlowActionCfg(
             asset_name="robot",
@@ -359,7 +371,6 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
             scale=1.0,
             body_offset=RMPFlowActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.0], rot=[0.7071, 0.0, -0.7071, 0.0]),
             articulation_prim_expr="/World/envs/env_.*/Robot",
-            use_relative_mode=self.use_relative_mode,
         )
 
         # Enable Parallel Gripper:
