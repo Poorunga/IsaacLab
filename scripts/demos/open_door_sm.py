@@ -28,7 +28,7 @@ import warp as wp
 from isaaclab.sensors import FrameTransformer
 
 import isaaclab_tasks  # noqa: F401
-from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.open_door_rmp_rel_env_cfg import (
+from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.rmp_abs_env_cfg import (
     OpenDoorEnvCfg
 )
 from isaaclab_tasks.utils.parse_cfg import parse_env_cfg
