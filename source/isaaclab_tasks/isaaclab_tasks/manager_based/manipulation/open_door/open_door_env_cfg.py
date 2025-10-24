@@ -12,7 +12,7 @@ from isaaclab.managers import (
     TerminationTermCfg as DoneTerm,
 )
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import FrameTransformerCfg
+from isaaclab.sensors import FrameTransformerCfg, TiledCameraCfg
 from isaaclab.sensors.frame_transformer import OffsetCfg
 import isaaclab.sim as sim_utils
 from isaaclab.sim.schemas.schemas_cfg import MassPropertiesCfg
@@ -37,6 +37,11 @@ MY_ASSETS_PATH = os.getenv("MY_ASSETS_PATH", "missing_assets_dir")
 class SceneCfg(InteractiveSceneCfg):
     # robots, Will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
+    # robot cameras sensors, Will be populated by agent env cfg
+    head_camera: TiledCameraCfg = MISSING
+    left_camera: TiledCameraCfg = MISSING
+    right_camera: TiledCameraCfg = MISSING
+
     # End-effector, Will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = MISSING
 
