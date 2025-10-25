@@ -93,8 +93,10 @@ class SceneCfg(InteractiveSceneCfg):
     # plane
     plane = AssetBaseCfg(
         prim_path="/World/GroundPlane",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0]),
-        spawn=sim_utils.GroundPlaneCfg(),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0], rot=(0, 0, 0, 1)),
+        spawn=sim_utils.UsdFileCfg(
+            usd_path=f"{MY_ASSETS_PATH}/Environments/Simple_Warehouse/warehouse.usd",
+        ),
         collision_group=-1,
     )
 
@@ -209,8 +211,8 @@ class OpenDoorEnvCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 1
         self.episode_length_s = 8.0
-        self.viewer.eye = (-2.0, -2.0, 2.0)
-        self.viewer.lookat = (0.8, 0.0, 0.5)
+        self.viewer.eye = (-2.0, 4.0, 2.0)
+        self.viewer.lookat = (3.5, -1.0, 0.5)
         # simulation settings
         self.sim.dt = 1 / 60  # 60Hz
         self.sim.render_interval = self.decimation

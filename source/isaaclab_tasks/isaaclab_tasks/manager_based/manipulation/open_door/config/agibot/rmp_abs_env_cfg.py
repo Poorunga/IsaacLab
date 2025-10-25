@@ -81,21 +81,21 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
         )
         self.scene.head_camera = CAMERA_CFG.copy()
         self.scene.head_camera.prim_path = "{ENV_REGEX_NS}/Robot/link_pitch_head/head_camera"
-        self.scene.head_camera.offset = CameraCfg.OffsetCfg(
+        self.scene.head_camera.offset = TiledCameraCfg.OffsetCfg(
             pos=(-0.355, 0.181, 0.0),
             rot=(-0.0779, -0.4443, 0.7329, 0.5092),
             convention="world"
         )
         self.scene.left_camera = CAMERA_CFG.copy()
         self.scene.left_camera.prim_path = "{ENV_REGEX_NS}/Robot/left_base_link/left_camera"
-        self.scene.left_camera.offset = CameraCfg.OffsetCfg(
+        self.scene.left_camera.offset = TiledCameraCfg.OffsetCfg(
             pos=(0.0, -0.085, 0.097),
             rot=(-0.4815, 0.1081, 0.8177, -0.2962),
             convention="world"
         )
         self.scene.right_camera = CAMERA_CFG.copy()
         self.scene.right_camera.prim_path = "{ENV_REGEX_NS}/Robot/right_base_link/right_camera"
-        self.scene.right_camera.offset = CameraCfg.OffsetCfg(
+        self.scene.right_camera.offset = TiledCameraCfg.OffsetCfg(
             pos=(0.0, -0.084, 0.091),
             rot=(0.7038, -0.1129, -0.6355, 0.2966),
             convention="world"
