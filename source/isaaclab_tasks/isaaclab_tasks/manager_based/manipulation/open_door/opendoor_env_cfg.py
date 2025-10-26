@@ -5,14 +5,13 @@ from isaaclab.actuators.actuator_cfg import ImplicitActuatorCfg
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import (
-    EventTermCfg as EventTerm,
     ObservationGroupCfg as ObsGroup,
     ObservationTermCfg as ObsTerm,
     SceneEntityCfg,
     TerminationTermCfg as DoneTerm,
 )
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import FrameTransformerCfg, TiledCameraCfg
+from isaaclab.sensors import FrameTransformerCfg
 from isaaclab.sensors.frame_transformer import OffsetCfg
 import isaaclab.sim as sim_utils
 from isaaclab.sim.schemas.schemas_cfg import MassPropertiesCfg
@@ -37,12 +36,6 @@ MY_ASSETS_PATH = os.getenv("MY_ASSETS_PATH", "missing_assets_dir")
 class SceneCfg(InteractiveSceneCfg):
     # robots, Will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
-    # robot cameras sensors, Will be populated by agent env cfg
-    head_camera: TiledCameraCfg = MISSING
-    left_camera: TiledCameraCfg = MISSING
-    right_camera: TiledCameraCfg = MISSING
-    persr_camera: TiledCameraCfg = MISSING
-
     # End-effector, Will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = MISSING
 
@@ -51,19 +44,18 @@ class SceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.UsdFileCfg(
             usd_path=f"{MY_ASSETS_PATH}/Objects/Door/door_9288/door_9288.usd",
             activate_contact_sensors=False,
-            mass_props=MassPropertiesCfg(mass=10.0),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(1.2, -0.5, 0.95),
             rot=(1.0, 0.0, 0.0, -0.05),
-            joint_pos={"joint_0": 0.0, "joint_2": 0.3},
+            joint_pos={"joint_0": 0.0, "joint_2": 0.0},
         ),
         actuators={
             "door": ImplicitActuatorCfg(
                 joint_names_expr=["joint_0"],
-                effort_limit_sim=0.0,
+                effort_limit_sim=2.0,
                 damping=5.0,
-                stiffness=0.0,
+                stiffness=2.0,
             ),
             "handle": ImplicitActuatorCfg(
                 joint_names_expr=["joint_2"],
@@ -115,6 +107,7 @@ class SceneCfg(InteractiveSceneCfg):
 class ActionsCfg:
     """Action specifications for the MDP."""
 
+    # will be set by agent env cfg
     arm_action: mdp.JointPositionActionCfg = MISSING
     gripper_action: mdp.BinaryJointPositionActionCfg = MISSING
 
@@ -127,69 +120,34 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
+        actions = ObsTerm(func=mdp.last_action)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
         door_joint_pos = ObsTerm(
             func=mdp.joint_pos_rel,
             params={"asset_cfg": SceneEntityCfg("door", joint_names=["joint_0"])},
         )
-        door_joint_vel = ObsTerm(
+        handle_joint_pos = ObsTerm(
             func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg("door", joint_names=["joint_0"])},
+            params={"asset_cfg": SceneEntityCfg("door", joint_names=["joint_2"])},
         )
         rel_ee_handle_distance = ObsTerm(func=mdp.rel_ee_handle_distance)
-
-        actions = ObsTerm(func=mdp.last_action)
-
-        persr_camera = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("persr_camera"), "data_type": "rgb", "normalize": False}
-        )
-        head_camera = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("head_camera"), "data_type": "rgb", "normalize": False}
-        )
-        left_camera = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("left_camera"), "data_type": "rgb", "normalize": False}
-        )
-        right_camera = ObsTerm(
-            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("right_camera"), "data_type": "rgb", "normalize": False}
-        )
 
         def __post_init__(self):
             self.enable_corruption = True
             self.concatenate_terms = True
 
+    @configclass
+    class RGBCameraPolicyCfg(ObsGroup):
+        """Observations for policy group with RGB images."""
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = False
+
     # observation groups
     policy: PolicyCfg = PolicyCfg()
-
-
-@configclass
-class EventCfg:
-    """Configuration for events."""
-    robot_physics_material = EventTerm(
-        func=mdp.randomize_rigid_body_material,
-        mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (5.23, 5.25),
-            "dynamic_friction_range": (5.23, 5.25),
-            "restitution_range": (0.0, 0.0),
-            "num_buckets": 16,
-        },
-    )
-
-    door_physics_material = EventTerm(
-        func=mdp.randomize_rigid_body_material,
-        mode="startup",
-        params={
-            "asset_cfg": SceneEntityCfg("door", body_names="link_2"),
-            "static_friction_range": (5.23, 5.25),
-            "dynamic_friction_range": (5.45, 5.5),
-            "restitution_range": (0.0, 0.0),
-            "num_buckets": 16,
-        },
-    )
-
-    reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset", params={"reset_joint_targets": True})
+    rgb_camera: RGBCameraPolicyCfg = RGBCameraPolicyCfg()
 
 
 @configclass
@@ -209,24 +167,24 @@ class OpenDoorEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the open door environment."""
 
     # Scene settings
-    scene: SceneCfg = SceneCfg(num_envs=128, env_spacing=2.5)
+    scene: SceneCfg = SceneCfg(num_envs=128, env_spacing=2.5, replicate_physics=False)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
     # MDP settings
     terminations: TerminationsCfg = TerminationsCfg()
-    events: EventCfg = EventCfg()
 
     # Unused managers
     commands = None
     rewards = None
+    events = None
     curriculum = None
 
     def __post_init__(self):
         """Post initialization."""
         # general settings
         self.decimation = 1
-        self.episode_length_s = 8.0
+        self.episode_length_s = 15.0
         self.viewer.eye = (-2.0, 4.0, 2.0)
         self.viewer.lookat = (3.5, -1.0, 0.5)
         # simulation settings

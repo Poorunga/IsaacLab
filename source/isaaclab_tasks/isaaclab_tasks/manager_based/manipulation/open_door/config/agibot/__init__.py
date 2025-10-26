@@ -11,7 +11,27 @@ gym.register(
     id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.rmp_abs_env_cfg:RmpFlowAgibotOpenDoorEnvCfg",
+        "env_cfg_entry_point": f"{__name__}.opendoor_rmp_abs_env_cfg:AgibotOpenDoorEnvCfg",
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.opendoor_rmp_abs_visuomotor_env_cfg:AgibotOpenDoorVisuomotorEnvCfg",
+        # "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_84.json"),
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Cosmos-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.opendoor_rmp_abs_visuomotor_cosmos_env_cfg:AgibotOpenDoorVisuomotorCosmosEnvCfg",
+        # "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc_rnn_image_84.json"),
     },
     disable_env_checker=True,
 )

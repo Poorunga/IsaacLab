@@ -5,6 +5,12 @@ from isaaclab.app import AppLauncher
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Open door state machine for open door environments.")
 parser.add_argument(
+    "--task",
+    type=str,
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-v0",
+    help="Name of the task."
+)
+parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
@@ -25,7 +31,7 @@ import torch
 from isaaclab.sensors import FrameTransformer
 
 import isaaclab_tasks  # noqa: F401
-from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.rmp_abs_env_cfg import (
+from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.opendoor_rmp_abs_env_cfg import (
     OpenDoorEnvCfg
 )
 from isaaclab_tasks.utils.parse_cfg import parse_env_cfg
@@ -35,13 +41,13 @@ from state_machine import OpenDoorSm
 def main():
     # parse configuration
     env_cfg: OpenDoorEnvCfg = parse_env_cfg(
-        "Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
+        args_cli.task,
         device=args_cli.device,
         num_envs=args_cli.num_envs,
         use_fabric=not args_cli.disable_fabric,
     )
     # create environment
-    env = gym.make("Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0", cfg=env_cfg)
+    env = gym.make(args_cli.task, cfg=env_cfg)
     # reset environment at start
     env.reset()
 
@@ -79,6 +85,7 @@ def main():
             # reset state machine
             if dones.any():
                 open_sm.reset_idx(dones.nonzero(as_tuple=False).squeeze(-1))
+                env.reset()
 
     # close the environment
     env.close()

@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description="Record demonstrations for A2D open
 parser.add_argument(
     "--task",
     type=str,
-    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Cosmos-v0",
     help="Name of the task."
 )
 parser.add_argument(
@@ -121,7 +121,7 @@ def create_environment_config(
 
     # modify configuration such that the environment runs indefinitely until
     # the goal is reached or other termination conditions are met
-    env_cfg.terminations.time_out = None
+    # env_cfg.terminations.time_out = None
     env_cfg.observations.policy.concatenate_terms = False
 
     env_cfg.recorders: ActionStateRecorderManagerCfg = ActionStateRecorderManagerCfg()
@@ -231,6 +231,11 @@ def run_simulation_loop(env: gym.Env, success_term: object | None) -> int:
     with torch.inference_mode():
         while simulation_app.is_running():
             dones = env.step(actions)[-2]
+            if dones.any():
+                success_step_count = handle_reset(env, success_step_count)
+                should_reset_recording_instance = False
+                open_sm.reset_idx()
+
             # observations
             # -- end-effector frame
             ee_frame_tf: FrameTransformer = env.unwrapped.scene["ee_frame"]
