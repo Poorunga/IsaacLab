@@ -100,6 +100,13 @@ class RmpFlowAgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
             rot=(0.7038, -0.1129, -0.6355, 0.2966),
             convention="world"
         )
+        self.scene.persr_camera = CAMERA_CFG.copy()
+        self.scene.persr_camera.prim_path = "{ENV_REGEX_NS}/Robot/link_pitch_head/persr_camera"
+        self.scene.persr_camera.offset = TiledCameraCfg.OffsetCfg(
+            pos=(2.0, 0.85, 2.35),
+            rot=(0.1637, -0.3696, 0.6854, 0.6055),
+            convention="world"
+        )
 
         # Set the simulation parameters
         self.sim.dt = 1 / 60

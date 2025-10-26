@@ -13,12 +13,12 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument(
-    "--num_demos", type=int, default=5, help="Number of demonstrations to record. Set to 0 for infinite."
+    "--num_demos", type=int, default=1, help="Number of demonstrations to record. Set to 0 for infinite."
 )
 parser.add_argument(
     "--num_success_steps",
     type=int,
-    default=30,
+    default=20,
     help="Number of continuous steps with task success for concluding a demo as successful. Default is 10.",
 )
 

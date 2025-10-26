@@ -41,6 +41,7 @@ class SceneCfg(InteractiveSceneCfg):
     head_camera: TiledCameraCfg = MISSING
     left_camera: TiledCameraCfg = MISSING
     right_camera: TiledCameraCfg = MISSING
+    persr_camera: TiledCameraCfg = MISSING
 
     # End-effector, Will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = MISSING
@@ -139,6 +140,19 @@ class ObservationsCfg:
         rel_ee_handle_distance = ObsTerm(func=mdp.rel_ee_handle_distance)
 
         actions = ObsTerm(func=mdp.last_action)
+
+        persr_camera = ObsTerm(
+            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("persr_camera"), "data_type": "rgb", "normalize": False}
+        )
+        head_camera = ObsTerm(
+            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("head_camera"), "data_type": "rgb", "normalize": False}
+        )
+        left_camera = ObsTerm(
+            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("left_camera"), "data_type": "rgb", "normalize": False}
+        )
+        right_camera = ObsTerm(
+            func=mdp.image, params={"sensor_cfg": SceneEntityCfg("right_camera"), "data_type": "rgb", "normalize": False}
+        )
 
         def __post_init__(self):
             self.enable_corruption = True
