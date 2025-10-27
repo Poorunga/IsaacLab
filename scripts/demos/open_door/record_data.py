@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description="Record demonstrations for A2D open
 parser.add_argument(
     "--task",
     type=str,
-    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Cosmos-v0",
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Fisheye-v0",
     help="Name of the task."
 )
 parser.add_argument(
