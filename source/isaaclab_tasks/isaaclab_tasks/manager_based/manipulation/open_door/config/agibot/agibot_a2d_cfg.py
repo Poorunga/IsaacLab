@@ -125,7 +125,7 @@ AGIBOT_A2D_CFG = ArticulationCfg(
         # "right_.*_Support_Joint" driver joint can be set optionally, to disable the driver, set stiffness and damping to 0.0 below
         "right_gripper": ImplicitActuatorCfg(
             joint_names_expr=["right_hand_joint1", "right_.*_Support_Joint"],
-            effort_limit_sim={"right_hand_joint1": 100.0, "right_.*_Support_Joint": 100.0},
+            effort_limit_sim={"right_hand_joint1": 15.0, "right_.*_Support_Joint": 15.0},
             velocity_limit_sim=10.0,
             stiffness={"right_hand_joint1": 20.0, "right_.*_Support_Joint": 2.0},
             damping={"right_hand_joint1": 0.10, "right_.*_Support_Joint": 0.01},

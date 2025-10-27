@@ -20,15 +20,15 @@ simulation_app = app_launcher.app
 import torch
 
 from isaaclab.envs import ManagerBasedRLEnv
-from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.opendoor_rmp_abs_visuomotor_env_cfg import (
-    AgibotOpenDoorVisuomotorEnvCfg
+from isaaclab_tasks.manager_based.manipulation.open_door.config.agibot.opendoor_rmp_abs_env_cfg import (
+    AgibotOpenDoorEnvCfg
 )
 
 
 def main():
     """Main function."""
     # parse the arguments
-    env_cfg = AgibotOpenDoorVisuomotorEnvCfg()
+    env_cfg = AgibotOpenDoorEnvCfg()
     env_cfg.scene.num_envs = args_cli.num_envs
     env_cfg.sim.device = args_cli.device
     # setup base environment

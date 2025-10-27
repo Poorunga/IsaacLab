@@ -42,11 +42,11 @@ class SceneCfg(InteractiveSceneCfg):
     door = ArticulationCfg(
         prim_path="{ENV_REGEX_NS}/Door",
         spawn=sim_utils.UsdFileCfg(
-            usd_path=f"{MY_ASSETS_PATH}/Objects/Door/door_9288/door_9288.usd",
+            usd_path=f"{MY_ASSETS_PATH}/Objects/Door/door_8994/door_8994.usd",
             activate_contact_sensors=False,
         ),
         init_state=ArticulationCfg.InitialStateCfg(
-            pos=(1.2, -0.5, 0.95),
+            pos=(1.1, -0.5, 0.95),
             rot=(1.0, 0.0, 0.0, -0.05),
             joint_pos={"joint_0": 0.0, "joint_2": 0.0},
         ),
@@ -73,10 +73,10 @@ class SceneCfg(InteractiveSceneCfg):
         visualizer_cfg=FRAME_MARKER_SMALL_CFG.replace(prim_path="/Visuals/HandleFrameTransformer"),
         target_frames=[
             FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Door/link_2",
+                prim_path="{ENV_REGEX_NS}/Door/link_1",  # door_8994的门把手是link1
                 name="handle_frame",
                 offset=OffsetCfg(
-                    pos=(0.05, 0.0, 0.08),  # -y,-z,-x
+                    pos=(0.0, 0.0, 0.02),  # -y,-z,-x
                     rot=[0.0, 0.0, -1.0, 0.0]
                 ),
             ),

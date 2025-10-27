@@ -49,7 +49,7 @@ class EventCfg:
         mode="reset",
         params={
             "pose_range": {
-                "x": (1.1, 1.3),
+                "x": (1.0, 1.15),
                 "y": (-0.45, -0.55),
                 "z": (0.95, 0.95),
                 "yaw": (-0.05, 0.05, 0)
@@ -64,8 +64,8 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (10.0, 11.0),
-            "dynamic_friction_range": (10.0, 11.0),
+            "static_friction_range": (20.0, 21.0),
+            "dynamic_friction_range": (20.0, 21.0),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 16,
         },
@@ -76,8 +76,8 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("door", body_names="link_2"),
-            "static_friction_range": (14.0, 15.0),
-            "dynamic_friction_range": (14.0, 15.0),
+            "static_friction_range": (24.0, 25.0),
+            "dynamic_friction_range": (24.0, 25.0),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 16,
         },
@@ -87,7 +87,7 @@ class EventCfg:
         func=mdp.randomize_rigid_body_mass,
         mode="reset",
         params={
-            "asset_cfg": SceneEntityCfg("door", body_names=["link_0"]),
+            "asset_cfg": SceneEntityCfg("door", body_names=["link_1"]),  # door_8994的门把手是link1
             "mass_distribution_params": (0.1, 0.3),
             "operation": "abs",
         },
@@ -171,8 +171,8 @@ class AgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
     """Configuration for Agibot Open Door Environment."""
 
     # Evaluation settings
-    eval_mode = None
-    eval_type = None
+    eval_mode = True
+    eval_type = "all"
 
     def __post_init__(self):
         # post init of parent
