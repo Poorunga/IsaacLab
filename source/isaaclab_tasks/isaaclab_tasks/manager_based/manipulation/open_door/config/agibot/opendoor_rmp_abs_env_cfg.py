@@ -171,8 +171,8 @@ class AgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
     """Configuration for Agibot Open Door Environment."""
 
     # Evaluation settings
-    eval_mode = True
-    eval_type = "all"
+    eval_mode = None
+    eval_type = None
 
     def __post_init__(self):
         # post init of parent
