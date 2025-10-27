@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description="Record demonstrations for A2D open
 parser.add_argument(
     "--task",
     type=str,
-    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Fisheye-v0",
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
     help="Name of the task."
 )
 parser.add_argument(
@@ -13,13 +13,16 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument(
-    "--num_demos", type=int, default=1, help="Number of demonstrations to record. Set to 0 for infinite."
+    "--num_demos", type=int, default=5, help="Number of demonstrations to record. Set to 0 for infinite."
 )
 parser.add_argument(
     "--num_success_steps",
     type=int,
     default=20,
     help="Number of continuous steps with task success for concluding a demo as successful. Default is 10.",
+)
+parser.add_argument(
+    "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 
 # append AppLauncher cli args
@@ -102,6 +105,7 @@ def create_environment_config(
             args_cli.task,
             device=args_cli.device,
             num_envs=args_cli.num_envs,
+            use_fabric=not args_cli.disable_fabric,
         )
         env_cfg.env_name = args_cli.task.split(":")[-1]
     except Exception as e:

@@ -62,3 +62,12 @@ gym.register(
     },
     disable_env_checker=True,
 )
+
+gym.register(
+    id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Annotators-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.opendoor_rmp_abs_visuomotor_annotators_env_cfg:AgibotOpenDoorVisuomotorAnnotatorsEnvCfg",
+    },
+    disable_env_checker=True,
+)

@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(description="Open door state machine for open d
 parser.add_argument(
     "--task",
     type=str,
-    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-v0",
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
     help="Name of the task."
 )
 parser.add_argument(
