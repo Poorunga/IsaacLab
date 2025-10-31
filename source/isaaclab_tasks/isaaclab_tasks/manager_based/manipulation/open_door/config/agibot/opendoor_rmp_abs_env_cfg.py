@@ -1,3 +1,4 @@
+from isaaclab.assets import RigidObjectCfg
 from isaaclab.envs.mdp.actions.rmpflow_actions_cfg import RMPFlowActionCfg
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import SceneEntityCfg
@@ -76,8 +77,8 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("door", body_names="link_2"),
-            "static_friction_range": (14.0, 15.0),
-            "dynamic_friction_range": (14.0, 15.0),
+            "static_friction_range": (24.0, 25.0),
+            "dynamic_friction_range": (24.0, 25.0),
             "restitution_range": (0.0, 0.0),
             "num_buckets": 16,
         },
@@ -234,4 +235,8 @@ class AgibotOpenDoorEnvCfg(OpenDoorEnvCfg):
                     ),
                 ),
             ],
+        )
+
+        self.scene.door_handle = RigidObjectCfg(
+            prim_path="{ENV_REGEX_NS}/Door/link_2"
         )

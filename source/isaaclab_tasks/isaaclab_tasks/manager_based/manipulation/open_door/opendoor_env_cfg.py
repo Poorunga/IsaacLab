@@ -14,9 +14,9 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import FrameTransformerCfg
 from isaaclab.sensors.frame_transformer import OffsetCfg
 import isaaclab.sim as sim_utils
-from isaaclab.sim.schemas.schemas_cfg import MassPropertiesCfg
 from isaaclab.utils import configclass
 
+import isaaclab_tasks.manager_based.manipulation.stack.mdp as stack_mdp
 import isaaclab_tasks.manager_based.manipulation.open_door.mdp as mdp
 
 ##
@@ -123,19 +123,14 @@ class ObservationsCfg:
         actions = ObsTerm(func=mdp.last_action)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
-        door_joint_pos = ObsTerm(
-            func=mdp.joint_pos_rel,
-            params={"asset_cfg": SceneEntityCfg("door", joint_names=["joint_0"])},
-        )
-        handle_joint_pos = ObsTerm(
-            func=mdp.joint_vel_rel,
-            params={"asset_cfg": SceneEntityCfg("door", joint_names=["joint_2"])},
-        )
+        eef_pos = ObsTerm(func=stack_mdp.ee_frame_pos)
+        eef_quat = ObsTerm(func=stack_mdp.ee_frame_quat)
+        gripper_pos = ObsTerm(func=stack_mdp.gripper_pos)
         rel_ee_handle_distance = ObsTerm(func=mdp.rel_ee_handle_distance)
 
         def __post_init__(self):
-            self.enable_corruption = True
-            self.concatenate_terms = True
+            self.enable_corruption = False
+            self.concatenate_terms = False
 
     @configclass
     class RGBCameraPolicyCfg(ObsGroup):
@@ -145,9 +140,28 @@ class ObservationsCfg:
             self.enable_corruption = False
             self.concatenate_terms = False
 
+    @configclass
+    class SubtaskCfg(ObsGroup):
+        """Observations for subtask group."""
+
+        grasp = ObsTerm(
+            func=mdp.handle_grasped,
+            params={
+                "robot_cfg": SceneEntityCfg("robot"),
+                "ee_frame_cfg": SceneEntityCfg("ee_frame"),
+                "object_cfg": SceneEntityCfg("door", body_names="link_2"),
+                "diff_threshold": 0.1,
+            },
+        )
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = False
+
     # observation groups
     policy: PolicyCfg = PolicyCfg()
     rgb_camera: RGBCameraPolicyCfg = RGBCameraPolicyCfg()
+    subtask_terms: SubtaskCfg = SubtaskCfg()
 
 
 @configclass
