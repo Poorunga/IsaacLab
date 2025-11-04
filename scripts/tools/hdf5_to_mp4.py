@@ -152,10 +152,9 @@ def write_demo_to_mp4(
             if "depth" not in input_key:
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             else:
-                frame = (frame[..., 0] - MIN_DEPTH) / (MAX_DEPTH - MIN_DEPTH)
-                frame = np.where(frame < 0.01, 1.0, frame)
-                frame = 1.0 - frame
-                frame = (frame * 255.0).astype(np.uint8)
+                frame = frame[..., 0]  # Select the depth channel (if it's in the shape [height, width, 1])
+                frame = frame / frame.max()  # Normalize to [0, 1] by dividing by max depth value
+                frame = (frame * 255.0).astype(np.uint8)  # Scale to [0, 255] and convert to uint8
 
             # Resize to video resolution
             frame = cv2.resize(frame, (video_width, video_height), interpolation=cv2.INTER_CUBIC)
