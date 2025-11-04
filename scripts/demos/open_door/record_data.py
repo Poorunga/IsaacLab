@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(description="Record demonstrations for A2D open
 parser.add_argument(
     "--task",
     type=str,
-    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-v0",
+    default="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Visuomotor-Cosmos-v0",
     help="Name of the task."
 )
 parser.add_argument(
@@ -13,7 +13,7 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument(
-    "--num_demos", type=int, default=3, help="Number of demonstrations to record. Set to 0 for infinite."
+    "--num_demos", type=int, default=2, help="Number of demonstrations to record. Set to 0 for infinite."
 )
 parser.add_argument(
     "--num_success_steps",

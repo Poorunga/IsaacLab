@@ -170,10 +170,18 @@ gym.register(
 
 gym.register(
     id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Abs-Mimic-v0",
-    # entry_point=f"{__name__}.agibot_opendoor_mimic_env:RmpFlowAgibotOpenDoorMimicEnv",
     entry_point=f"{__name__}.pick_place_mimic_env:PickPlaceAbsMimicEnv",
     kwargs={
         "env_cfg_entry_point": f"{__name__}.agibot_opendoor_mimic_env_cfg:RmpFlowAgibotOpenDoorMimicEnvCfg",
+    },
+    disable_env_checker=True,
+)
+
+gym.register(
+    id="Learn-Open-Door-Agibot-Right-Arm-RmpFlow-Abs-Visuomotor-Cosmos-Mimic-v0",
+    entry_point=f"{__name__}.pick_place_mimic_env:PickPlaceAbsMimicEnv",
+    kwargs={
+        "env_cfg_entry_point": f"{__name__}.agibot_opendoor_visuomotor_cosmos_mimic_env_cfg:RmpFlowAgibotOpenDoorVisuomotorCosmosMimicEnvCfg",
     },
     disable_env_checker=True,
 )

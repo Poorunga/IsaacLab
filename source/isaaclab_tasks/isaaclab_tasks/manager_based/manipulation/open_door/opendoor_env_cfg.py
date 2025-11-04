@@ -76,7 +76,7 @@ class SceneCfg(InteractiveSceneCfg):
                 prim_path="{ENV_REGEX_NS}/Door/link_2",
                 name="handle_frame",
                 offset=OffsetCfg(
-                    pos=(0.05, 0.0, 0.08),  # -y,-z,-x
+                    pos=(0.05, 0.0, 0.06),  # -y,-z,-x
                     rot=[0.0, 0.0, -1.0, 0.0]
                 ),
             ),
@@ -133,14 +133,6 @@ class ObservationsCfg:
             self.concatenate_terms = False
 
     @configclass
-    class RGBCameraPolicyCfg(ObsGroup):
-        """Observations for policy group with RGB images."""
-
-        def __post_init__(self):
-            self.enable_corruption = False
-            self.concatenate_terms = False
-
-    @configclass
     class SubtaskCfg(ObsGroup):
         """Observations for subtask group."""
 
@@ -160,7 +152,6 @@ class ObservationsCfg:
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
-    rgb_camera: RGBCameraPolicyCfg = RGBCameraPolicyCfg()
     subtask_terms: SubtaskCfg = SubtaskCfg()
 
 

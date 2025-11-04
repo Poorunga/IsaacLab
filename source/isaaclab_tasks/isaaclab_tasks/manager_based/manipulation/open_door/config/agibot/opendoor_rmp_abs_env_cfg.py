@@ -40,7 +40,7 @@ class EventCfg:
         mode="reset",
         params={
             "mean": 0.0,
-            "std": 0.08,
+            "std": 0.02,
             "asset_cfg": SceneEntityCfg("door"),
         },
     )
@@ -50,7 +50,7 @@ class EventCfg:
         mode="reset",
         params={
             "pose_range": {
-                "x": (1.1, 1.3),
+                "x": (1.15, 1.25),
                 "y": (-0.45, -0.55),
                 "z": (0.95, 0.95),
                 "yaw": (-0.05, 0.05, 0)
