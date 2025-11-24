@@ -79,7 +79,9 @@ class MeshConverter(AssetConverterBase):
             RuntimeError: If the conversion using the Omniverse asset converter fails.
         """
         # resolve mesh name and format
-        mesh_file_basename, mesh_file_format = os.path.basename(cfg.asset_path).split(".")
+        mesh_file_basename, mesh_file_format = os.path.basename(cfg.asset_path).split(
+            "."
+        )
         mesh_file_format = mesh_file_format.lower()
 
         # Check if mesh_file_basename is a valid USD identifier
@@ -124,12 +126,16 @@ class MeshConverter(AssetConverterBase):
                 if cfg.collision_props is not None:
                     # -- Collider properties such as offset, scale, etc.
                     schemas.define_collision_properties(
-                        prim_path=child_mesh_prim.GetPath(), cfg=cfg.collision_props, stage=stage
+                        prim_path=child_mesh_prim.GetPath(),
+                        cfg=cfg.collision_props,
+                        stage=stage,
                     )
                 # Add collision mesh
                 if cfg.mesh_collision_props is not None:
                     schemas.define_mesh_collision_properties(
-                        prim_path=child_mesh_prim.GetPath(), cfg=cfg.mesh_collision_props, stage=stage
+                        prim_path=child_mesh_prim.GetPath(),
+                        cfg=cfg.mesh_collision_props,
+                        stage=stage,
                     )
         # Delete the old Xform and make the new Xform the default prim
         stage.SetDefaultPrim(xform_prim)
@@ -170,10 +176,14 @@ class MeshConverter(AssetConverterBase):
             )
             # Delete the original prim that will now be a reference
             geom_prim_path = geom_prim.GetPath().pathString
-            omni.kit.commands.execute("DeletePrims", paths=[geom_prim_path], stage=stage)
+            omni.kit.commands.execute(
+                "DeletePrims", paths=[geom_prim_path], stage=stage
+            )
             # Update references to exported Xform and make it instanceable
             geom_undef_prim = stage.DefinePrim(geom_prim_path)
-            geom_undef_prim.GetReferences().AddReference(self.usd_instanceable_meshes_path, primPath=geom_prim_path)
+            geom_undef_prim.GetReferences().AddReference(
+                self.usd_instanceable_meshes_path, primPath=geom_prim_path
+            )
             geom_undef_prim.SetInstanceable(True)
 
         # Apply mass and rigid body properties after everything else
@@ -181,10 +191,14 @@ class MeshConverter(AssetConverterBase):
         #   asset unintentionally share the same rigid body properties
         # apply mass properties
         if cfg.mass_props is not None:
-            schemas.define_mass_properties(prim_path=xform_prim.GetPath(), cfg=cfg.mass_props, stage=stage)
+            schemas.define_mass_properties(
+                prim_path=xform_prim.GetPath(), cfg=cfg.mass_props, stage=stage
+            )
         # apply rigid body properties
         if cfg.rigid_props is not None:
-            schemas.define_rigid_body_properties(prim_path=xform_prim.GetPath(), cfg=cfg.rigid_props, stage=stage)
+            schemas.define_rigid_body_properties(
+                prim_path=xform_prim.GetPath(), cfg=cfg.rigid_props, stage=stage
+            )
 
         # Save changes to USD stage
         stage.Save()
@@ -196,7 +210,9 @@ class MeshConverter(AssetConverterBase):
     """
 
     @staticmethod
-    async def _convert_mesh_to_usd(in_file: str, out_file: str, load_materials: bool = True) -> bool:
+    async def _convert_mesh_to_usd(
+        in_file: str, out_file: str, load_materials: bool = True
+    ) -> bool:
         """Convert mesh from supported file types to USD.
 
         This function uses the Omniverse Asset Converter extension to convert a mesh file to USD.
@@ -223,10 +239,10 @@ class MeshConverter(AssetConverterBase):
         converter_context = omni.kit.asset_converter.AssetConverterContext()
         # Set up converter settings
         # Don't import/export materials
-        converter_context.ignore_materials = not load_materials
-        converter_context.ignore_animations = True
-        converter_context.ignore_camera = True
-        converter_context.ignore_light = True
+        converter_context.ignore_materials = False
+        converter_context.ignore_animations = False
+        converter_context.ignore_camera = False
+        converter_context.ignore_light = False
         # Merge all meshes into one
         converter_context.merge_all_meshes = True
         # Sets world units to meters, this will also scale asset if it's centimeters model.
@@ -236,11 +252,27 @@ class MeshConverter(AssetConverterBase):
         # Uses double precision for all transform ops.
         converter_context.use_double_precision_to_usd_transform_op = True
 
+        converter_context.single_mesh = True
+        converter_context.smooth_normals = True
+        converter_context.export_preview_surface = False
+        converter_context.create_world_as_default_root_prim = True
+        converter_context.embed_textures = True
+        converter_context.convert_fbx_to_y_up = False
+        converter_context.convert_fbx_to_z_up = True
+        converter_context.keep_all_materials = False
+        converter_context.ignore_pivots = False
+        converter_context.disabling_instancing = False
+        converter_context.export_hidden_props = False
+
         # Create converter task
         instance = omni.kit.asset_converter.get_instance()
-        task = instance.create_converter_task(in_file, out_file, None, converter_context)
+        task = instance.create_converter_task(
+            in_file, out_file, None, converter_context
+        )
         # Start conversion task and wait for it to finish
         success = await task.wait_until_finished()
         if not success:
-            raise RuntimeError(f"Failed to convert {in_file} to USD. Error: {task.get_error_message()}")
+            raise RuntimeError(
+                f"Failed to convert {in_file} to USD. Error: {task.get_error_message()}"
+            )
         return success
