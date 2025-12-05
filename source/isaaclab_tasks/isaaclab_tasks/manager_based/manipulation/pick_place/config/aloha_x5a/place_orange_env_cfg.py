@@ -20,17 +20,15 @@ from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import ContactSensorCfg, FrameTransformerCfg, TiledCameraCfg
+from isaaclab.sensors import FrameTransformerCfg, TiledCameraCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 from isaaclab.utils import configclass
 
-from isaaclab_tasks.manager_based.manipulation.place import mdp as place_mdp
-from isaaclab_tasks.manager_based.manipulation.place.config.aloha_x5a.aloha_x5a_cfg import (
+from isaaclab_tasks.manager_based.manipulation.lift import mdp
+from isaaclab_tasks.manager_based.manipulation.pick_place.config.aloha_x5a.aloha_x5a_cfg import (
     ALOHA_X5A_CFG,
 )
-from isaaclab_tasks.manager_based.manipulation.stack import mdp
-from isaaclab_tasks.manager_based.manipulation.stack.mdp import franka_stack_events
 
 ##
 # Pre-defined configs
@@ -41,9 +39,6 @@ from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
 MY_ASSETS_PATH = os.getenv("MY_ASSETS_PATH", "missing_assets_dir")
 
 
-##
-# Scene definition
-##
 @configclass
 class KitchenRoomSceneCfg(InteractiveSceneCfg):
     """Configuration for the lift scene with a robot and a object.
@@ -59,7 +54,9 @@ class KitchenRoomSceneCfg(InteractiveSceneCfg):
     # plane
     plane = AssetBaseCfg(
         prim_path="/World/KitchenRoom",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0]),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=(0.5, 0, 0), rot=(0.70711, 0.0, 0.0, -0.70711)
+        ),
         spawn=sim_utils.UsdFileCfg(
             usd_path=f"{MY_ASSETS_PATH}/Environments/Kitchen_Room/KitchenRoom_RSS.usd",
         ),
@@ -67,52 +64,35 @@ class KitchenRoomSceneCfg(InteractiveSceneCfg):
     )
 
 
-##
-# Event settings
-##
+@configclass
+class CommandsCfg:
+    """Command terms for the MDP."""
+
+    object_pose = mdp.UniformPoseCommandCfg(
+        asset_name="robot",
+        body_name=MISSING,  # will be set by agent env cfg
+        resampling_time_range=(5.0, 5.0),
+        debug_vis=True,
+        ranges=mdp.UniformPoseCommandCfg.Ranges(
+            pos_x=(0.70, 0.75),
+            pos_y=(-0.5, -0.4),
+            pos_z=(1.0, 1.1),
+            roll=(0.0, 0.0),
+            pitch=(0.0, 0.0),
+            yaw=(0.0, 0.0),
+        ),
+    )
 
 
 @configclass
-class EventCfgPlaceToy2Box:
-    """Configuration for events."""
+class ActionsCfg:
+    """Action specifications for the MDP."""
 
-    reset_all = EventTerm(
-        func=mdp.reset_scene_to_default,
-        mode="reset",
-        params={"reset_joint_targets": True},
-    )
-
-    # init_toy_position = EventTerm(
-    #     func=franka_stack_events.randomize_object_pose,
-    #     mode="reset",
-    #     params={
-    #         "pose_range": {
-    #             "x": (-0.15, 0.20),
-    #             "y": (-0.3, -0.15),
-    #             "z": (-0.65, -0.65),
-    #             "yaw": (-3.14, 3.14),
-    #         },
-    #         "asset_cfgs": [SceneEntityCfg("toy_truck")],
-    #     },
-    # )
-    # init_box_position = EventTerm(
-    #     func=franka_stack_events.randomize_object_pose,
-    #     mode="reset",
-    #     params={
-    #         "pose_range": {
-    #             "x": (0.25, 0.35),
-    #             "y": (0.0, 0.10),
-    #             "z": (-0.55, -0.55),
-    #             "yaw": (-3.14, 3.14),
-    #         },
-    #         "asset_cfgs": [SceneEntityCfg("box")],
-    #     },
-    # )
-
-
-#
-# MDP settings
-##
+    # will be set by agent env cfg
+    arm_action: (
+        mdp.JointPositionActionCfg | mdp.DifferentialInverseKinematicsActionCfg
+    ) = MISSING
+    gripper_action: mdp.BinaryJointPositionActionCfg = MISSING
 
 
 @configclass
@@ -123,48 +103,47 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group with state values."""
 
-        actions = ObsTerm(func=mdp.last_action)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel)
-        orange_positions = ObsTerm(
-            func=place_mdp.object_poses_in_base_frame,
-            params={"object_cfg": SceneEntityCfg("orange"), "return_key": "pos"},
+        object_position = ObsTerm(
+            func=mdp.object_position_in_robot_root_frame,
+            params={
+                "robot_cfg": SceneEntityCfg("robot"),
+                "object_cfg": SceneEntityCfg("orange"),
+            },
         )
-        orange_orientations = ObsTerm(
-            func=place_mdp.object_poses_in_base_frame,
-            params={"object_cfg": SceneEntityCfg("orange"), "return_key": "quat"},
+        target_object_position = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "object_pose"}
         )
-        plate_positions = ObsTerm(
-            func=place_mdp.object_poses_in_base_frame,
-            params={"object_cfg": SceneEntityCfg("plate"), "return_key": "pos"},
-        )
-        plate_orientations = ObsTerm(
-            func=place_mdp.object_poses_in_base_frame,
-            params={"object_cfg": SceneEntityCfg("plate"), "return_key": "quat"},
-        )
-        eef_pos = ObsTerm(
-            func=mdp.ee_frame_pose_in_base_frame, params={"return_key": "pos"}
-        )
-        eef_quat = ObsTerm(
-            func=mdp.ee_frame_pose_in_base_frame, params={"return_key": "quat"}
-        )
-        gripper_pos = ObsTerm(func=mdp.gripper_pos)
+        actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
-            self.enable_corruption = False
-            self.concatenate_terms = False
+            self.enable_corruption = True
+            self.concatenate_terms = True
 
     # observation groups
     policy: PolicyCfg = PolicyCfg()
 
 
 @configclass
-class ActionsCfg:
-    """Action specifications for the MDP."""
+class EventCfg:
+    """Configuration for events."""
 
-    # will be set by agent env cfg
-    arm_action: mdp.JointPositionActionCfg = MISSING
-    gripper_action: mdp.BinaryJointPositionActionCfg = MISSING
+    reset_all = EventTerm(
+        func=mdp.reset_scene_to_default,
+        mode="reset",
+        params={"reset_joint_targets": True},
+    )
+
+    # reset_object_position = EventTerm(
+    #     func=mdp.reset_root_state_uniform,
+    #     mode="reset",
+    #     params={
+    #         "pose_range": {"x": (-0.1, 0.1), "y": (-0.25, 0.25), "z": (0.0, 0.0)},
+    #         "velocity_range": {},
+    #         "asset_cfg": SceneEntityCfg("object", body_names="Object"),
+    #     },
+    # )
 
 
 @configclass
@@ -173,22 +152,22 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    orange_dropping = DoneTerm(
+    object_dropping = DoneTerm(
         func=mdp.root_height_below_minimum,
         params={"minimum_height": 0.2, "asset_cfg": SceneEntityCfg("orange")},
     )
 
-    success = DoneTerm(
-        func=place_mdp.object_a_is_into_b,
-        params={
-            "robot_cfg": SceneEntityCfg("robot"),
-            "object_a_cfg": SceneEntityCfg("orange"),
-            "object_b_cfg": SceneEntityCfg("plate"),
-            "xy_threshold": 0.10,
-            "height_diff": 0.06,
-            "height_threshold": 0.04,
-        },
-    )
+    # success = DoneTerm(
+    #     func=place_mdp.object_a_is_into_b,
+    #     params={
+    #         "robot_cfg": SceneEntityCfg("robot"),
+    #         "object_a_cfg": SceneEntityCfg("orange"),
+    #         "object_b_cfg": SceneEntityCfg("plate"),
+    #         "xy_threshold": 0.10,
+    #         "height_diff": 0.06,
+    #         "height_threshold": 0.04,
+    #     },
+    # )
 
 
 @configclass
@@ -202,13 +181,13 @@ class PlaceOrangeEnvCfg(ManagerBasedRLEnvCfg):
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
+    commands: CommandsCfg = CommandsCfg()
     # MDP settings
     terminations: TerminationsCfg = TerminationsCfg()
+    events: EventCfg = EventCfg()
 
     # Unused managers
-    commands = None
     rewards = None
-    events = None
     curriculum = None
 
     def __post_init__(self):
@@ -223,8 +202,8 @@ class PlaceOrangeEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.physx.friction_correlation_distance = 0.00625
 
         # set viewer to see the whole scene
-        self.viewer.eye = [2.0, -1.5, 2.0]
-        self.viewer.lookat = [-1.0, 1.2, 0.6]
+        self.viewer.eye = (2.0, -1.5, 2.0)
+        self.viewer.lookat = (-1.0, 1.2, 0.6)
 
 
 """
@@ -238,8 +217,6 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
         # post init of parent
         super().__post_init__()
 
-        self.events = EventCfgPlaceToy2Box()
-
         # Set aloha_x5a as robot
         self.scene.robot = ALOHA_X5A_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
@@ -247,7 +224,7 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=["right_joint[1-8]"],
-            body_name="right_link7",
+            body_name="right_gripper_center",
             controller=DifferentialIKControllerCfg(
                 command_type="pose",
                 use_relative_mode=False,
@@ -255,7 +232,7 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
             ),
             scale=1.0,
             body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(
-                pos=[0.0, 0.0, 0.0]
+                pos=(0.0, 0.0, 0.0)
             ),
         )
 
@@ -270,15 +247,14 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
                 "right_joint[7-8]": 0.0,
             },
         )
-
-        # find joint ids for grippers
-        self.gripper_joint_names = ["right_joint7", "right_joint8"]
-        self.gripper_open_val = 0.5
-        self.gripper_threshold = 0.2
+        # Set the body name for the end effector
+        self.commands.object_pose.body_name = "right_gripper_center"
 
         self.scene.orange = RigidObjectCfg(
-            prim_path="{ENV_REGEX_NS}/Half_Orange",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=[0.48, 0.14, 0.95]),
+            prim_path="{ENV_REGEX_NS}/Orange",
+            init_state=RigidObjectCfg.InitialStateCfg(
+                pos=(0.73, -0.46, 0.95), rot=(1.0, 0, 0, 0.0)
+            ),
             spawn=UsdFileCfg(
                 usd_path=f"{MY_ASSETS_PATH}/Environments/Kitchen_Room/half_orange.usd",
             ),
@@ -286,7 +262,7 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
 
         self.scene.plate = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Plate",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=[0.19, 0.17, 0.95]),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=(0.72, -0.15, 0.95)),
             spawn=UsdFileCfg(
                 usd_path=f"{MY_ASSETS_PATH}/Environments/Kitchen_Room/plate.usd",
             ),
@@ -299,15 +275,13 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
 
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/base_link",
-            debug_vis=True,
+            debug_vis=False,
             visualizer_cfg=self.marker_cfg,
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
                     prim_path="{ENV_REGEX_NS}/Robot/right_arm/right_gripper_center",
                     name="end_effector",
-                    offset=OffsetCfg(
-                        pos=[0.0, 0.0, 0.0],
-                    ),
+                    offset=OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
                 ),
             ],
         )

@@ -10,10 +10,10 @@ import gymnasium as gym
 ##
 
 ##
-# Aloha_x5a Left Arm: place upright mug task, with RmpFlow
+# Aloha_x5a Right Arm: place and place orange
 ##
 gym.register(
-    id="Aloha-X5A-Place-Mug-Agibot-Left-Arm-RmpFlow-v0",
+    id="AlohaX5a-Pnp-Orange-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     kwargs={
         "env_cfg_entry_point": f"{__name__}.place_orange_env_cfg:AlohaX5aPlaceOrangeEnvCfg",
