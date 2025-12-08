@@ -29,6 +29,7 @@ from isaaclab_tasks.manager_based.manipulation.lift import mdp
 from isaaclab_tasks.manager_based.manipulation.pick_place.config.aloha_x5a.aloha_x5a_cfg import (
     ALOHA_X5A_CFG,
 )
+from isaaclab_tasks.manager_based.manipulation.place import mdp as place_mdp
 
 ##
 # Pre-defined configs
@@ -72,7 +73,7 @@ class CommandsCfg:
         asset_name="robot",
         body_name=MISSING,  # will be set by agent env cfg
         resampling_time_range=(5.0, 5.0),
-        debug_vis=True,
+        debug_vis=False,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             pos_x=(0.70, 0.75),
             pos_y=(-0.5, -0.4),
@@ -135,15 +136,15 @@ class EventCfg:
         params={"reset_joint_targets": True},
     )
 
-    # reset_object_position = EventTerm(
-    #     func=mdp.reset_root_state_uniform,
-    #     mode="reset",
-    #     params={
-    #         "pose_range": {"x": (-0.1, 0.1), "y": (-0.25, 0.25), "z": (0.0, 0.0)},
-    #         "velocity_range": {},
-    #         "asset_cfg": SceneEntityCfg("object", body_names="Object"),
-    #     },
-    # )
+    reset_object_position = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (-0.01, 0.01), "y": (-0.01, 0.01), "z": (0.0, 0.0)},
+            "velocity_range": {},
+            "asset_cfg": SceneEntityCfg("plate"),
+        },
+    )
 
 
 @configclass
@@ -157,17 +158,17 @@ class TerminationsCfg:
         params={"minimum_height": 0.2, "asset_cfg": SceneEntityCfg("orange")},
     )
 
-    # success = DoneTerm(
-    #     func=place_mdp.object_a_is_into_b,
-    #     params={
-    #         "robot_cfg": SceneEntityCfg("robot"),
-    #         "object_a_cfg": SceneEntityCfg("orange"),
-    #         "object_b_cfg": SceneEntityCfg("plate"),
-    #         "xy_threshold": 0.10,
-    #         "height_diff": 0.06,
-    #         "height_threshold": 0.04,
-    #     },
-    # )
+    success = DoneTerm(
+        func=place_mdp.object_a_is_into_b,
+        params={
+            "robot_cfg": SceneEntityCfg("robot"),
+            "object_a_cfg": SceneEntityCfg("orange"),
+            "object_b_cfg": SceneEntityCfg("plate"),
+            "xy_threshold": 0.10,
+            "height_diff": 0.0,
+            "height_threshold": 0.03,
+        },
+    )
 
 
 @configclass
@@ -202,8 +203,8 @@ class PlaceOrangeEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.physx.friction_correlation_distance = 0.00625
 
         # set viewer to see the whole scene
-        self.viewer.eye = (2.0, -1.5, 2.0)
-        self.viewer.lookat = (-1.0, 1.2, 0.6)
+        self.viewer.eye = (-0.6, -1.7, 2.4)
+        self.viewer.lookat = (2.9, 2.3, -1.0)
 
 
 """
@@ -247,6 +248,12 @@ class AlohaX5aPlaceOrangeEnvCfg(PlaceOrangeEnvCfg):
                 "right_joint[7-8]": 0.0,
             },
         )
+
+        # find joint ids for grippers
+        self.gripper_joint_names = ["right_joint7", "right_joint8"]
+        self.gripper_open_val = 0.04
+        self.gripper_threshold = 0.3
+
         # Set the body name for the end effector
         self.commands.object_pose.body_name = "right_gripper_center"
 
